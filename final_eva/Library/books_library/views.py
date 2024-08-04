@@ -1,8 +1,13 @@
-from django.shortcuts import render
-
-# Create your views here.
-from rest_framework import viewsets, filters, pagination
+from rest_framework import viewsets, filters, pagination, generics
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+
 from .models import Country, Author, Books
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, AuthorSerializer, BooksSerializer, CountrySerializer
 
@@ -10,6 +15,7 @@ class StandardResultsSetPagination(pagination.PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -48,7 +54,7 @@ class LoginView(APIView):
                     'access': str(refresh.access_token),
                     'user': UserSerializer(user).data
                 }
-                response.status = status.HTTP_200_OK
+                response.status_code = status.HTTP_200_OK
                 response.set_cookie(
                     key='refresh_token',
                     value=str(refresh),
@@ -65,7 +71,6 @@ class LoginView(APIView):
 
             return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
